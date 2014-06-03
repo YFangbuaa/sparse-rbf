@@ -10,7 +10,33 @@
 
 \documentclass[annual]{acmsiggraph}
 
-\TOGonlineid{45678}
+% the natbib package allows both number and author-year (Harvard)
+% style referencing;
+%\usepackage{natbib}
+
+% if you use PostScript figures in your article
+% use the graphics package for simple commands
+% \usepackage{graphics}
+% or use the graphicx package for more complicated commands
+% or use the epsfig package if you prefer to use the old commands
+% \usepackage{epsfig}
+
+%\usepackage{subfigure}
+%\usepackage{pstricks}
+\usepackage{graphicx}
+\usepackage{caption}
+\usepackage{subcaption}
+% The amssymb package provides various useful mathematical symbols
+\usepackage{amsmath}
+\usepackage{amssymb}
+%\usepackage{amsfonts}
+%\usepackage{mathptmx}
+%\usepackage{color}
+\usepackage{mathrsfs}
+\usepackage{color}
+%\usepackage{subfigure} %subfigure
+
+\TOGonlineid{148}
 \TOGvolume{0}
 \TOGnumber{0}
 \TOGarticleDOI{1111111.2222222}
@@ -20,8 +46,11 @@
 \TOGcodeURL{}
 
 \title{A Sparse Shape Descriptor Using Radial Basis Function on Medial Axis}
-\author{Zheng, Wenni\thanks{e-mail:wnzheng@cs.hku.hk}\\Department of Computer Science, the University of Hong Kong\\Weekly Report, April 7th, 2014}
-\author{test,\\aa\\aa}
+\author{Zheng, Wenni\thanks{e-mail:wnzheng@cs.hku.hk}\\Department of Computer Science, the University of Hong Kong}
+\author{Wang, Jun}
+\author{Chen, Falai}
+\author{Yang, Zhouwang}
+\author{Wang, Wenping\thanks{e-mail:wenping@cs.hku.hk}}
 \pdfauthor{Zheng, Wenni}
 
 \keywords{convex optimization, radial basis function, medial axis, shape descriptor, sparsity}
@@ -37,7 +66,7 @@
 
 \begin{abstract}
 
-Fitting planar points is a fundamental problem in geometric modeling. In this paper, we study the fitting problem using radial basis function, and bring forward a new fitting method which has fewer variables, lighter computational load and sparser result than previous approaches. Unlike traditional methods focusing only on the shape of the fitting curve, our approach aims to build up a signed distance field from the data points as well as their medial axis. In this way, the radial basis function, which is actually served to approximate the distance field we built, will naturally reconstruct the target shape formed by the data points. Our method is packed as a convex optimization problem with $L^1$-regularization so that we could also exploit the sparsity of the solution at the same time as the minimization problem is solved. 
+%Fitting planar points is a fundamental problem in geometric modeling. In this paper, we study the fitting problem using radial basis function, and bring forward a new fitting method which has fewer variables, lighter computational load and sparser result than previous approaches. Unlike traditional methods focusing only on the shape of the fitting curve, our approach aims to build up a signed distance field from the data points as well as their medial axis. In this way, the radial basis function, which is actually served to approximate the distance field we built, will naturally reconstruct the target shape formed by the data points. Our method is packed as a convex optimization problem with $L^1$-regularization so that we could also exploit the sparsity of the solution at the same time as the minimization problem is solved. 
 
 \end{abstract}
 
@@ -52,6 +81,8 @@ Fitting planar points is a fundamental problem in geometric modeling. In this pa
 \copyrightspace
 
 \section{Introduction}
+
+
 
 Our method targets at 3 different goals: 1) The isosurface should convinciningly describe the target shape, 2) The isosurface should not contain any extra patches which does not lay on the point cloud and 3) The isosurface should be represented by a sparse representation of radial basis function. For the first goal, we follow the tradition of using $L^2$-error to measure the quality of isosurface. Our method differs from former approaches in the second goal.
 
@@ -176,27 +207,150 @@ We use the Alternating Direction Method of Multipliers(ADMM) to solve the above 
 \textbf{Sparsity. }
 Since we solve an $L^1$-regularized optimization instead of $L^0$-regularized problem, the result of ADMM may contain some small but nonzero coefficients. In the last step of our algorithm, we set the coefficients whose absolute value are smaller than $10^{-4}$ as 0. After this step, we get the final sparse representation of the radial basis function.
 
-\textbf{Algorithm Flowchart. }
-
-
 \section{Results and Discussions}
-\cite{Chen:2009:ABF}
+~\cite{Chen:2009:ABF}
 
 
 \textbf{Error Bounded Sparse Representation with Medial Axis. }
-Medial axis simplification problem is studied in many former literatures. However, previous work didn't tell us how the process of simplification links with the error introduced to the simplified shape comparing with the original shape. Consequently, users may feel hard to control the quality of the shape when trying to obtain a clean medial axis. Our method addresses this problem: Given an error bound $\epsilon_1$ in constraints [], our method will give a sparse representation of radial basis function, which is a linear combination of Gaussian function on some selected medial axis points. In other words, the medial axis points corresponding to non-zero coffeicients in the radial basis function are simplified from the original medial axis under a given error bound $\epsilon_1$. 
+Medial axis simplification problem is studied in many former literatures. However, previous work didn't tell us how the process of simplification links with the error introduced to the simplified shape comparing with the original shape. Consequently, users may feel hard to control the quality of the shape when trying to obtain a clean medial axis. Our method addresses this problem: Given an error bound $\epsilon_1$ in constraints [], our method will give a sparse representation of radial basis function, which is a linear combination of Gaussian function on some selected medial axis points. $\epsilon_1$. 
+\begin{figure*}
+        \centering
+		\begin{subfigure}[b]{0.24\linewidth}
+                \centering
+                \includegraphics[width=\textwidth]{images/vase/0.pdf}
+       \end{subfigure}
+		~
+		\begin{subfigure}[b]{0.24\linewidth}
+                \centering
+                \includegraphics[width=0.92\textwidth]{images/vase/2.pdf}
+        \end{subfigure}
+~
+		\begin{subfigure}[b]{0.24\linewidth}
+                \centering
+                \includegraphics[width=0.98\textwidth]{images/vase/3.pdf}
+        \end{subfigure}
+~
+		\begin{subfigure}[b]{0.24\linewidth}
+                \centering
+                \includegraphics[width=0.92\textwidth]{images/vase/4.pdf}
+        \end{subfigure}
+        \caption{Chinese calligraphy which means 'horse'. From left to right: ground truth, shape of the signed distance field approximated by the radial basis function, signed distance field at height = $0.025$, $0.05$ and $0.075$, respectively. }
+				\label{fig:horse}
+\end{figure*}
+
+\begin{figure*}
+        \centering
+		\begin{subfigure}[b]{0.19\linewidth}
+                \centering
+                \includegraphics[width=\textwidth]{images/bear/0.pdf}
+       \end{subfigure}
+		~
+		\begin{subfigure}[b]{0.19\linewidth}
+                \centering
+                \includegraphics[width=\textwidth]{images/bear/1.pdf}
+        \end{subfigure}
+~
+		\begin{subfigure}[b]{0.19\linewidth}
+                \centering
+                \includegraphics[width=\textwidth]{images/bear/2.pdf}
+        \end{subfigure}
+~
+		\begin{subfigure}[b]{0.19\linewidth}
+                \centering
+                \includegraphics[width=\textwidth]{images/bear/3.pdf}
+        \end{subfigure}
+~
+		\begin{subfigure}[b]{0.19\linewidth}
+                \centering
+                \includegraphics[width=\textwidth]{images/bear/4.pdf}
+        \end{subfigure}
+        \caption{Chinese calligraphy which means 'horse'. From left to right: ground truth, shape of the signed distance field approximated by the radial basis function, signed distance field at height = $0.025$, $0.05$ and $0.075$, respectively. }
+				\label{fig:horse}
+\end{figure*}
+
+
 
 \textbf{Sparsity comparing with former approaches. }
 
 
 \textbf{Distance Field Building. } 
-As we discussed, our aim of optimization is to build the distance field inside the shape, while keeping the radial basis function value lower than 0 outside the shape. The error between radial basis function and distance field at medial axis points are regularized with constraint []. By setting $\epsilon_2$ in the constraint to a small value, we could get high quality distance field within the shape after the optimization process. Figure [] shows the distance field reconstructed on Chinese character 'horse', with $\epsilon_2=0.05$. Note that previous methods like Possion or MPU could only construct reliable distance field near the data points, not in the whole inner space of the shape. A comparison of our distance field with previous methods is given in Figure [].
+As we discussed, our aim of optimization is to build the distance field inside the shape, while keeping the radial basis function value lower than 0 outside the shape. The error between radial basis function and distance field at medial axis points are regularized with constraint []. By setting $\epsilon_2$ in the constraint to a small value, we could get high quality distance field within the shape after the optimization process. Figure~\ref{fig:horse} shows the distance field reconstructed on a Chinese character 'horse', with $\epsilon_2=0.05$. Note that previous methods like Possion or MPU could only construct reliable distance field near the data points, not in the whole inner space of the shape. Our method, on the other hand, could retrieve distance field deep in shape. The 3 subfigures in Figure~\ref{fig:horse} shows am application of the signed distnace field we've obtained: We could offset the Chinese character easily by extracting isocurves of different heights from the radial basis fucntion.
+\begin{figure*}
+        \centering
+		\begin{subfigure}[b]{0.16\linewidth}
+                \centering
+                \includegraphics[width=\textwidth]{images/horse/horse.pdf}
+        \end{subfigure}
+        ~
+		\begin{subfigure}[b]{0.18\linewidth}
+                \centering
+                \includegraphics[width=\textwidth]{images/horse/horse_3d.pdf}
+        \end{subfigure}
+        ~
+		\begin{subfigure}[b]{0.18\linewidth}
+                \centering
+                \includegraphics[width=\textwidth]{images/horse/horse-contour-0d25.pdf}
+        \end{subfigure}
+		~
+		\begin{subfigure}[b]{0.18\linewidth}
+                \centering
+                \includegraphics[width=\textwidth]{images/horse/horse-contour-0d5.pdf}
+        \end{subfigure}
+~
+		\begin{subfigure}[b]{0.18\linewidth}
+                \centering
+                \includegraphics[width=\textwidth]{images/horse/horse-contour-0d75.pdf}
+        \end{subfigure}
+        \caption{Chinese calligraphy which means 'horse'. From left to right: ground truth, shape of the signed distance field approximated by the radial basis function, signed distance field at height = $0.025$, $0.05$ and $0.075$, respectively. }
+				\label{fig:horse}
+\end{figure*}
 
 \textbf{Distance Field vs Sparsity. }
 Readers may notice that the ridge anchor constraints [], which is measured by $L^{\infty}$-norm, impose constraints on each anchor points. This is seemingly an obstacle to the final sparsity in solution. Figure [] surveyed the relation among the selection of $\epsilon_2$, the reconstruction error, and the sparsity. 
 
 \textbf{Multiscale shape represnetation abilitiy. } 
-Many real world shapes contain both bulky and tiny parts. To reconstruct these shapes, local or hierarchical methods need to carefully detect the variation of scales and to properly re-scale in order to match the local level of detail. Our method, on the other hand, uses radial basis which radius are porportional to the scale of the shape. Then, the constraints [] used to build signed distance field are set as relative error constraints to cope with the difference in shape scale. As a result, our method actually transforms a multi-scale input shape to a uniform-scale signed distance field reconstruction problem. In this sense, we do not need to take any additional care on relatively tiny parts of the shape. Figure ?? shows the radial basis function representation and signed distance field representing the shape of a  rhenoceros. Note how the thin tail and bulky body of the rhenoceros are reconstructed simultaneously with the help of properly built distance field. 
+Many real world shapes contain both bulky and tiny parts. To reconstruct these shapes, local or hierarchical methods need to carefully detect the variation of scales and to properly re-scale in order to match the local level of detail. Our method, on the other hand, uses radial basis which radius are porportional to the scale of the shape. Then, the constraints [] used to build signed distance field are set as relative error constraints to cope with the difference in shape scale. As a result, our method actually transforms a multi-scale input shape to a uniform-scale signed distance field reconstruction problem. In this sense, we do not need to take any additional care on relatively tiny parts of the shape. Figure ?? shows the radial basis function representation and signed distance field representing the shape of a rhenoceros. Note how the thin tail and bulky body of the rhenoceros are reconstructed simultaneously when we built the signed distance field. Figure ?? shows the shape of a seahorse with many spikes on its body reconstructed by our method. Geometric details near each spike are reconstructed by a sequence of radial basis' approaching the spike with diminishing radius. 
+
+\begin{figure}
+        \centering
+		\begin{subfigure}[b]{0.34\linewidth}
+                \centering
+                \includegraphics[width=\textwidth]{images/seahorse/1.pdf}
+       \end{subfigure}
+		~
+		\begin{subfigure}[b]{0.34\linewidth}
+                \centering
+                \includegraphics[width=\textwidth]{images/seahorse/2.pdf}
+        \end{subfigure}
+~
+		\begin{subfigure}[b]{0.25\linewidth}
+                \centering
+                \includegraphics[width=\textwidth]{images/seahorse/3.pdf}
+        \end{subfigure}
+        \caption{Chinese calligraphy which means 'horse'. From left to right: ground truth, shape of the signed distance field approximated by the radial basis function, signed distance field at height = $0.025$, $0.05$ and $0.075$, respectively. }
+				\label{fig:horse}
+\end{figure}
+
+\begin{figure}
+        \centering
+		\begin{subfigure}[b]{0.3\linewidth}
+                \centering
+                \includegraphics[width=\textwidth]{images/rhenoceros/1.pdf}
+       \end{subfigure}
+		~
+		\begin{subfigure}[b]{0.33\linewidth}
+                \centering
+                \includegraphics[width=\textwidth]{images/rhenoceros/2.pdf}
+        \end{subfigure}
+~
+		\begin{subfigure}[b]{0.3\linewidth}
+                \centering
+                \includegraphics[width=\textwidth]{images/rhenoceros/3.pdf}
+        \end{subfigure}
+        \caption{Chinese calligraphy which means 'horse'. From left to right: ground truth, shape of the signed distance field approximated by the radial basis function, signed distance field at height = $0.025$, $0.05$ and $0.075$, respectively. }
+				\label{fig:horse}
+\end{figure}
+
 
 \textbf{Robustness to Point Normal Noise. }
 Implicit reconstruction methods such as MPU and Poisson need accurate normal infomation associated with input data points for a high quality output. These methods are known to be prone to noise in normal information []. On the other hand, computing surface normal is not a trifle problem especially for shapes containing sharp features or of complicated topology structure. Medial axis computation does not need point normal as prerequisite, so our method could better adapt to problems in which normals could not be confidentally computed. Figure ?? shows an example of a thick knot. In this example, some surfaces closing to each other in terms of Euclidean are far away from each other in the sense of geodesic distance. Computation of surface normal in this example is not easy, but this difficulty will not effect our method.
@@ -210,7 +364,7 @@ Unlike local and hierarchical methods, our method considers the full point cloud
 
 \section{ADMM Solver for the Convex Optimization Problem}
 
-For a problem:
+For our problem:
 \begin{align}
 &\min\|x\|_1\\
 \mbox{subject to: }&\|Ax-b\|_2^2<\epsilon_1\\
