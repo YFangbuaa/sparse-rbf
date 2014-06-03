@@ -192,10 +192,10 @@ In optimization practice, we use the less-and-equal-than constraint $F(\mathbf{G
 
 \textbf{the Convex Optimization. } Now we have summarized the constraints of the optimization problem: Pointwise $L^2$-norm constraints depicting reconstruction error, ridge anchor constraints for approximating signed distance field, and sign anchor constraints for keeping the radial basis function negative outside the shape. The final target of the optimization is to keep the sparsity of the solution. This is achieved by minimizing the $L^1$-norm of the coefficients $\{c_i\}$. To sum up, the optimization problem is formulated as:
 \begin{align}
-&\min\sum_{i=1}^n|c_i|,\\
-s.t. &\sum_{k=1}^N F^2(\mathbf{X}_k)<\epsilon_1\cdot N^{\frac{1}{2}},\\
-&\|D\cdot(F(\mathbf{M}_i)-r_i)\|_{\infty}<\epsilon_2,\\
-& F(\mathbf{G}_i) \le \epsilon_3, \quad\forall \mathbf{G}_i.
+&\min\sum_{i=1}^n|c_i|,\label{eq:1}\\
+s.t. &\sum_{k=1}^N F^2(\mathbf{X}_k)<\epsilon_1\cdot N^{\frac{1}{2}},\label{eq:2}\\
+&\|D\cdot(F(\mathbf{M}_i)-r_i)\|_{\infty}<\epsilon_2,\label{eq:3}\\
+& F(\mathbf{G}_i) \le \epsilon_3, \quad\forall \mathbf{G}_i.\label{eq:4}
 \end{align}
 in which $D=diag\{1/r_1,...,1/r_n\}$.
 
@@ -362,41 +362,56 @@ Unlike local and hierarchical methods, our method considers the full point cloud
 
 \section*{Acknowledgements}
 
-\section{ADMM Solver for the Convex Optimization Problem}
-
-For our problem:
+\section*{Appendix: ADMM Solver for the Convex Optimization Problem}
+We follow the common notation in ADMM. The variables subject to $L^1$-norm minimization is denoted as $x$ (in our problem, $x=(c_1,...c_n)$ ). The pointwise $L^2$-error constraints(Eqn.~\ref{eq:2}), ridge anchor constraints(Eqn.~\ref{eq:3}) and sign anchor constraints(Eqn.~\ref{eq:4}) could be written in matrix form, along with the $L^1$-norm minimization(Eqn.~\ref{eq:1}), as:
 \begin{align}
 &\min\|x\|_1\\
-\mbox{subject to: }&\|Ax-b\|_2^2<\epsilon_1\\
-&\|Cx-d\|_{\infty}<\epsilon_2\\
-&Mx-v<\epsilon_3\\
-\mbox{Equivant to:}&\notag\\
+\mbox{s.t.: }&\|Ax-b\|_2^2<\epsilon_1\sqrt{N},\\
+&\|Cx-d\|_{\infty}<\epsilon_2,\\
+&[Mx-v]_i<\epsilon_3,\quad\forall i.
+\end{align}
+Where $A_{ij}=B_j(\mathbf{X}_i)$ is the value of the $j$-th radial basis at $\mathbf{X}_i$. $b$ is a 0-vector as we choose the isosurface at height 0 to approximate the input shape. $C_{ij}=B_j(\mathbf{M}_i)$ is the value of the $j$-th radial basis at the medial sphere center $\mathbf{M}_i$, scaled by the diagonal matrix $D$ Eqn.~\ref{eq:3}. $d$, after scaling by $D$ in Eqn.~\ref{eq:3}, is an all-one vector. $M_{ij}=B_j(\mathbf{G}_i)$ is the value of the $j$-th radial basis on the sign anchor $G_i$, and $v$ is a 0-vector in our optimization.
+
+For ADMM, this equivant to:
+\begin{align}
 &\min\|x\|_1\\
-\mbox{subject to: }&y_1-x=0\\
-&Ay_1-b-y_2=0\\
-&Cy_1-d-y_3=0\\
-&My_1-v-y_4=0\\
-&\|y_2\|_2<\epsilon_1\\
-&\|y_3\|_{\infty}<\epsilon_2\\
-&y_4<\epsilon_3\\
-L_\rho=&\|x\|_1+\frac{\rho_1}{2}\|y_1-x+u_1\|^2+\frac{\rho_2}{2}\|Ay_1-b-y_2+u_2\|^2\notag\\
-&+\frac{\rho_3}{2}\|Cy_1-d-y_3+u_3\|^2+\frac{\rho_4}{2}\|My_1-v-y_4+u_4\|^2\notag\\
-&+\Pi_{\{\|\cdot\|_2<\epsilon_1\}}(y_2)+\Pi_{\{\|\cdot\|_{\infty}<\epsilon_2\}}(y_3)+\Pi_{\{[\cdot]_i<\epsilon_3\}}(y_4).\\
-\mbox{ADMM Steps:}&\notag\\
-y_1^{k+1}=&\operatornamewithlimits{argmin}\limits_{y_1} \Big\{\frac{\rho_1}{2}\|y_1-x^k+u_1^k\|^2+\frac{\rho_2}{2}\|Ay_1-b-y_2^k+u_2^k\|^2\notag\\
-&+\frac{\rho_3}{2}\|Cy_1-d-y_3^k+u_3^k\|^2+\frac{\rho_4}{2}\|My_1-v-y_4^k+u_4^k\|^2 \Big\} \\
+\mbox{s.t. }&y_1-x=0,\\
+&Ay_1-b-y_2=0,\\
+&Cy_1-d-y_3=0,\\
+&My_1-v-y_4=0,\\
+&\|y_2\|_2<\epsilon_1\sqrt{N},\\
+&\|y_3\|_{\infty}<\epsilon_2,\\
+&y_4<\epsilon_3.
+\end{align}
+The Lagrangian for the above equation array is:
+\begin{align}
+L_\rho=&\|x\|_1+\frac{\rho_1}{2}\|y_1-x+u_1\|^2\notag\\
+&+\frac{\rho_2}{2}\|Ay_1-b-y_2+u_2\|^2+\frac{\rho_3}{2}\|Cy_1-d-y_3+u_3\|^2\notag\\
+&+\frac{\rho_4}{2}\|My_1-v-y_4+u_4\|^2+\Pi_{\{\|\cdot\|_2<\epsilon_1\}}(y_2)\notag\\
+&+\Pi_{\{\|\cdot\|_{\infty}<\epsilon_2\}}(y_3)+\Pi_{\{[\cdot]_i<\epsilon_3\}}(y_4).
+\end{align}
+In which $\Pi_{\mathcal{C}}(\cdot)$ is the indicator function defined on set $\mathcal{C}$.
+
+Now we could write down ADMM steps to update each variable: 
+\begin{align}
+y_1^{k+1}=&\operatornamewithlimits{argmin}\limits_{y_1} \Big\{\frac{\rho_1}{2}\|y_1-x^k+u_1^k\|^2\notag\\
+&+\frac{\rho_2}{2}\|Ay_1-b-y_2^k+u_2^k\|^2\notag\\
+&+\frac{\rho_3}{2}\|Cy_1-d-y_3^k+u_3^k\|^2\notag\\
+&+\frac{\rho_4}{2}\|My_1-v-y_4^k+u_4^k\|^2 \Big\} \\
 x^{k+1}=&\operatornamewithlimits{argmin}\limits_{x} \Big\{\|x\|_1+\frac{\rho_1}{2}\|y_1^{k+1}-x+u_1^k\|^2\Big\}\\
-y_2^{k+1}=&\operatornamewithlimits{argmin}\limits_{y_2} \Big\{\frac{\rho_2}{2}\|Ay_1^{k+1}-b-y_2+u_2^k\|^2+\Pi_{\{\|\cdot\|_2<\epsilon_1\}}(y_2)\Big\}\\
-y_3^{k+1}=&\operatornamewithlimits{argmin}\limits_{y_3} \Big\{\frac{\rho_3}{2}\|Cy_1^{k+1}-d-y_3+u_3^k\|^2+\Pi_{\{\|\cdot\|_{\infty}<\epsilon_2\}}(y_3)\Big\}\\
-y_4^{k+1}=&\operatornamewithlimits{argmin}\limits_{y_4} \Big\{\frac{\rho_4}{2}\|My_1^{k+1}-v-y_4+u_4^k\|^2+\Pi_{\{[\cdot]_i<\epsilon_3\}}(y_4)\Big\}\\
+y_2^{k+1}=&\operatornamewithlimits{argmin}\limits_{y_2} \Big\{\frac{\rho_2}{2}\|Ay_1^{k+1}-b-y_2+u_2^k\|^2\notag\\&+\Pi_{\{\|\cdot\|_2<\epsilon_1\}}(y_2)\Big\}\\
+y_3^{k+1}=&\operatornamewithlimits{argmin}\limits_{y_3} \Big\{\frac{\rho_3}{2}\|Cy_1^{k+1}-d-y_3+u_3^k\|^2\notag\\&+\Pi_{\{\|\cdot\|_{\infty}<\epsilon_2\}}(y_3)\Big\}\\
+y_4^{k+1}=&\operatornamewithlimits{argmin}\limits_{y_4} \Big\{\frac{\rho_4}{2}\|My_1^{k+1}-v-y_4+u_4^k\|^2\notag\\&+\Pi_{\{[\cdot]_i<\epsilon_3\}}(y_4)\Big\}\\
 u_1^{k+1}=&u_1^k+\gamma(y_1^{k+1}-x^{k+1})\\
 u_2^{k+1}=&u_2^k+\gamma(Ay_1^{k+1}-b-y_2^{k+1})\\
 u_3^{k+1}=&u_3^k+\gamma(Cy_1^{k+1}-d-y_3^{k+1})\\
 u_4^{k+1}=&u_4^k+\gamma(My_1^{k+1}-v-y_4^{k+1})\\
-\mbox{To solve it:}\notag\\
+\end{align}
+To solve it:
+\begin{align}
 y_1^{k+1}=&\Big( \rho_1 I+ \rho_2 A^TA+ \rho_3 C^TC+ \rho_4 M^TM\Big)^{-1}\cdot\notag\\
-&\cdot\Big(\rho_1 (x^k-u_1^k)+\rho_2 A^T(b+y_2^k-u_2^k)+ \rho_3 C^T(d+y_3^k-u_3^k)+\rho_4 M^T(v+y_4^k-u_4^k)\Big)\\
-x_1^{k+1}=&\max\Big(y_1^{k+1}+u_1^k-\frac{1}{\rho_1}, 0\Big) - \max\Big(-y_1^{k+1}-u_1^k-\frac{1}{\rho_1}, 0\Big)\\
+&\cdot\Big(\rho_1 (x^k-u_1^k)+\rho_2 A^T(b+y_2^k-u_2^k)\notag\\ &+ \rho_3 C^T(d+y_3^k-u_3^k)+\rho_4 M^T(v+y_4^k-u_4^k)\Big)\\
+x_1^{k+1}=&\max\Big(y_1^{k+1}+u_1^k-\frac{1}{\rho_1}, 0\Big) \notag\\&- \max\Big(-y_1^{k+1}-u_1^k-\frac{1}{\rho_1}, 0\Big)\\
 y_2^{k+1}=&\min\Big(\frac{\epsilon_1}{\|Ay_1^{k+1}+u_2^k-b\|},1\Big)\cdot\big(Ay_1^{k+1}+u_2^k-b\big)\\
 y_{3,i}^{k+1}=&\left\{
 \begin{array}{ll}
@@ -416,18 +431,10 @@ u_2^{k+1}=&u_2^k+\gamma(Ay_1^{k+1}-b-y_2^{k+1})\\
 u_3^{k+1}=&u_3^k+\gamma(Cy_1^{k+1}-d-y_3^{k+1})\\
 u_4^{k+1}=&u_4^k+\gamma(My_1^{k+1}-v-y_4^{k+1})
 \end{align}
-Initial values:
-\begin{align*}
-&x=1\\
-&y_1=1\\
-&y_2=0\\
-&y_3=0\\
-&y_4=0\\
-&u_1=0\\
-&u_2=0\\
-&u_3=0\\
-&u_4=0
-\end{align*}
+$\gamma$ is a relaxation term used to improve convergence. We fix $\gamma=1.6$ during the process of optimization in this paper. 
+
+As the constrained convex optimization problem has unique local minimum, different choice of initial values will hardly affect the optimization result. We set all variables $x, y_1, y_2, y_3, y_4, u_1, u_2, u_3$ and $u_4$ as 0 when optimization started. 
+
 Some literatures, such as [] [] and [] discussed the strategy to vary parameters $\{\rho_i\}$ during the process of optimization for acceleration. Nevertheless, convergence of ADMM is no longer guaranteed supposing $\{\rho_i\}$ are not fixed during iterations. Additionally, in our problem, upon the change of $\{\rho_i\}$, matrix $P$ used for $y_1$ update in ADMM must be calculated and decomposed again, causing considerable computational overhead. Thereore, in our approach, we fix $\{\rho_i\}$ as $\rho_1=1000, \rho_2=1000, \rho_3=1, \rho_4=50$ as an emperical parameter set. These parameters are used for all examples in this paper.
 \bibliographystyle{acmsiggraph}
 \bibliography{rbf}
